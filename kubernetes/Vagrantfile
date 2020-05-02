@@ -1,0 +1,100 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+BOX_NAME = "centos/7"
+JOIN_SCRIPT = "join-to-cluster.sh"
+
+# Setup constants
+Vagrant.configure(2) do |config|
+  # Use vagrant-env plugin if available
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.load('.env.local', '.env') # enable the plugin
+  end
+
+  # Number of worker nodes to provision
+  WORKER_NODES = env_or_default_int('WORKER_NODES', 2)
+
+  # To access your cluster from the host, set the following variable to true
+  ACCESS_FROM_HOST = env_or_default_bool('ACCESS_FROM_HOST', false)
+
+  # Master Node IP adress
+  MASTER_IP = env_or_default('MASTER_IP', '192.168.10.100')
+
+  # Memory for the VMs (2GB)
+  MEMORY = env_or_default_int('MEMORY', 2048)
+end
+
+# Convenience methods
+def env_or_default(key, default)
+  ENV[key] && ! ENV[key].empty? ? ENV[key] : default
+end
+  
+def env_or_default_int(key, default)
+  env_or_default(key, default).to_i
+end
+  
+def env_or_default_bool(key, default)
+  env_or_default(key, default).to_s.downcase == 'true'
+end
+
+Vagrant.configure(2) do |config|
+    config.vm.box = BOX_NAME
+    config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = MEMORY
+
+        vb.cpus = 2
+    end
+
+    # Master Node
+    config.vm.define "master", primary: true do |master|
+        master.vm.hostname = "master.vagrant.vm"
+        master.vm.network "private_network", ip: MASTER_IP
+
+        if Vagrant.has_plugin?("vagrant-hosts")
+            master.vm.provision :hosts, :sync_hosts => true
+        end
+
+        if ACCESS_FROM_HOST
+            # Bind kubernetes admin port to acceess from host
+            master.vm.network "forwarded_port", guest: 6443, host: 6443
+        end
+
+        args = []
+        args.push("--masterIp", MASTER_IP)
+        args.push("--joinScript", JOIN_SCRIPT)
+
+        master.vm.provision "shell",
+           path: "scripts/setup-master.sh",
+           args: args
+    end
+
+    # Worker Nodes
+    (1..WORKER_NODES).each do |i|
+        config.vm.define "worker#{i}" do |worker|
+           worker.vm.hostname = "worker#{i}.vagrant.vm"
+
+           ip_blocks = MASTER_IP.split(".")
+           ip_blocks[3] = ip_blocks[3].to_i + i
+           ip = ip_blocks.join(".")
+
+           worker.vm.network "private_network", ip: ip
+
+           if Vagrant.has_plugin?("vagrant-hosts")
+             worker.vm.provision :hosts, :sync_hosts => true
+           end
+
+
+           args = []
+           args.push("--joinScript", JOIN_SCRIPT)
+
+           worker.vm.provision "shell",
+              path: "scripts/setup-worker.sh",
+              args: args
+        end
+    end
+
+    config.vm.provision "shell",
+        path: "scripts/provision.sh"
+end
