@@ -20,5 +20,11 @@ do
   esac
 done
 
+if [ ! -f "${JoinScript}" ]
+then
+  echo "join script not found. Is the master initialized?"
+  exit 1
+fi
+
 echo "Joining node to Kubernetes Cluster"
 bash "/vagrant/${JoinScript}"
