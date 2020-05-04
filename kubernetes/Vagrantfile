@@ -31,6 +31,20 @@ Vagrant.configure(2) do |config|
 
   # Master Node CPU (2)
   MASTER_CPU = env_or_default_int('MASTER_MEMORY', 2)
+
+  # To install Helm, set the following variable to true
+  INSTALL_HELM = env_or_default_bool('INSTALL_HELM', false)
+
+  # To install Nginx, set the following variable to true
+  INSTALL_NGINX = env_or_default_bool('INSTALL_NGINX', false)
+
+  # To install Operator Lifecycle Manager, set the following variable to true
+  INSTALL_OLM = env_or_default_bool('INSTALL_OLM', false)
+
+  # Comma seperated list of operators to install
+  # Use install yaml name without .yaml extension.
+  # i.e.: For grafana operator with url https://operatorhub.io/install/grafana-operator.yaml use 'grafana-operator'
+  INSTALL_OPERATORS = env_or_default('INSTALL_OPERATORS', '')
 end
 
 # Convenience methods
@@ -78,6 +92,10 @@ Vagrant.configure(2) do |config|
         args = []
         args.push("--masterIp", MASTER_IP)
         args.push("--joinScript", JOIN_SCRIPT)
+        args.push("--installOperators", INSTALL_OPERATORS)
+        args.push("--installHelm") if INSTALL_HELM
+        args.push("--installNginx") if INSTALL_NGINX
+        args.push("--installOLM") if INSTALL_OLM
 
         master.vm.provision "shell",
            path: "scripts/setup-master.sh",

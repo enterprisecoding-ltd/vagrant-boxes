@@ -20,7 +20,7 @@ do
   esac
 done
 
-if [ ! -f "${JoinScript}" ]
+if [ ! -f "/vagrant/${JoinScript}" ]
 then
   echo "join script not found. Is the master initialized?"
   exit 1

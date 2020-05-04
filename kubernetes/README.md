@@ -10,8 +10,8 @@ This Vagrantfile will provision a Kubernetes cluster with one master and _n_ wor
 ## Quickstart
 Run following commands to start cluster
 ```shell
-git clone https://github.com/enterprisecoding-ltd/vagrant-boxes`
-cd kubernetes
+git clone https://github.com/enterprisecoding-ltd/vagrant-boxes
+cd vagrant-boxes/kubernetes
 vagrant up
 ```
 
