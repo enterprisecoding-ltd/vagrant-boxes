@@ -1,5 +1,6 @@
 #!/bin/bash
 
+AccessFromHost=false
 InstallOLM=false
 InstallHelm=false
 InstallNginx=false
@@ -8,6 +9,10 @@ InstallNginx=false
 while [ $# -gt 0 ]
 do
   case "$1" in
+    "--accessFromHost")
+      AccessFromHost=true
+      shift
+      ;;
     "--installOLM")
       InstallOLM=true
       shift
@@ -57,9 +62,14 @@ done
 echo "Pulling Kubernetes images"
 kubeadm config images pull
 
+if [ "$AccessFromHost" = true ]; then
+  echo "Initializing Kubernetes with localhost sans"
+  kubeadm init --apiserver-advertise-address=${MasterIp} --pod-network-cidr=10.244.0.0/16 --apiserver-cert-extra-sans localhost,localhost.localdomain,127.0.0.1
+else
+  echo "Initializing Kubernetes"
+  kubeadm init --apiserver-advertise-address=${MasterIp} --pod-network-cidr=10.244.0.0/16
+fi
 
-echo "Initializing Kubernetes"
-kubeadm init --apiserver-advertise-address=${MasterIp} --pod-network-cidr=10.244.0.0/16
 
 echo "Preparing kube config for root user"
 mkdir -p $HOME/.kube
@@ -78,10 +88,17 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 echo "Creating join script"
 kubeadm token create --print-join-command > "/vagrant/${JoinScript}"
 
+if [ "$AccessFromHost" = true ]; then
+  echo "Exporting kubeconfig"
+  kubectl config view --flatten | sed -E "s/server: .*/server: https:\/\/localhost:6443/g" > /vagrant/kubeconfig
+fi
+
 
 echo "Installing bash completion"
 yum install bash-completion -y
 echo "source <(kubectl completion bash)" >> ~/.bashrc
+echo 'alias k=kubectl' >>~/.bashrc
+echo 'complete -F __start_kubectl k' >>~/.bashrc
 source .bashrc
 
 echo "Installing kubens & kubectx"

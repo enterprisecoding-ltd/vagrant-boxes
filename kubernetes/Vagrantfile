@@ -93,6 +93,7 @@ Vagrant.configure(2) do |config|
         args.push("--masterIp", MASTER_IP)
         args.push("--joinScript", JOIN_SCRIPT)
         args.push("--installOperators", INSTALL_OPERATORS)
+        args.push("--accessFromHost") if ACCESS_FROM_HOST
         args.push("--installHelm") if INSTALL_HELM
         args.push("--installNginx") if INSTALL_NGINX
         args.push("--installOLM") if INSTALL_OLM

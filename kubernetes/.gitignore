@@ -1,5 +1,6 @@
 .env.local
 join-to-cluster.sh
+kubeconfig
 
 ### macOS ###
 # General
