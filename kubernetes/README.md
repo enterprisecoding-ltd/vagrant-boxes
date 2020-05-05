@@ -67,3 +67,9 @@ If you set **ACCESS_FROM_HOST**, you can add cluster to your host context using 
 ```shell
 KUBECONFIG=~/.kube/config:kubeconfig kubectl config view --merge --flatten > ~/.kube/config
 ```
+
+also you can use following command to switch new context;
+
+```shell
+kubectl config use-context kubernetes-admin@kubernetes
+```
