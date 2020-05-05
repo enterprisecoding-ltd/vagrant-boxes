@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+BOX_NAME = "centos/7"
+
+# Setup constants
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # Use vagrant-env plugin if available
+  if Vagrant.has_plugin?("vagrant-env")
+    config.env.load('.env.local', '.env') # enable the plugin
+  end
+
+  # Hostname
+  HOSTNAME = env_or_default('HOSTNAME', 'redis.vagrant.vm')
+
+  # VM IP address
+  IP = env_or_default('IP', '')
+
+  # VM Memory for the VMs (1GB)
+  MEMORY = env_or_default_int('MEMORY', 1024)
+
+  # VM CPU (1)
+  CPU = env_or_default_int('CPU', 1)
+
+  # To access your cluster from the host, set the following variable to true
+  ACCESS_FROM_HOST = env_or_default_bool('ACCESS_FROM_HOST', false)
+end
+
+# Convenience methods
+def env_or_default(key, default)
+    ENV[key] && ! ENV[key].empty? ? ENV[key] : default
+end
+    
+def env_or_default_int(key, default)
+    env_or_default(key, default).to_i
+end
+
+def env_or_default_bool(key, default)
+    env_or_default(key, default).to_s.downcase == 'true'
+end
+
+Vagrant.configure(2) do |config|
+    config.vm.box = BOX_NAME
+    
+    config.vm.hostname = HOSTNAME
+
+    config.vm.network "private_network", ip: IP if IP && ! IP.empty?
+
+    config.vm.provider "virtualbox" do |vb, config|
+        vb.memory = MEMORY
+        vb.cpus = CPU
+
+        vb.customize ["modifyvm", :id, "--groups", "/Redis"]
+        vb.customize ["modifyvm", :id, "--audio", "none"]
+    end
+
+    config.vm.provider "libvirt" do |lv, config|
+        lv.memory = MEMORY
+        lv.cpus = CPU
+    end
+
+    if ACCESS_FROM_HOST
+        # Bind redis port to access from host
+        config.vm.network :forwarded_port, guest: 6379, host: 6379
+    end
+
+    config.vm.provision "shell",
+        path: "scripts/provision.sh"
+end
