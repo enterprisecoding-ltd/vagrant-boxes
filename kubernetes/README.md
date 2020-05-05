@@ -61,8 +61,9 @@ Following parameters are avaliable to configure Kubernetes installation;
 | INSTALL_OLM | false | To install Operator Lifecycle Manager, set the following variable to true |
 | INSTALL_OPERATORS |  | Comma seperated list of operators to install. Use install yaml name without .yaml extension. i.e.: For grafana operator with url https://operatorhub.io/install/grafana-operator.yaml use 'grafana-operator' |
   
-  
-If you set **ACCESS_FROM_HOST**, you can add cluster to your host context using following command;
+In order to change any parameter copy **.env** file with name **.env.local**. Find the parameter you are looking for. uncomment by removing # infront. Finally, set its value.
+
+If you set **ACCESS_FROM_HOST** to true, you can add cluster to your host context using following command;
 
 ```shell
 KUBECONFIG=~/.kube/config:kubeconfig kubectl config view --merge --flatten > ~/.kube/config
