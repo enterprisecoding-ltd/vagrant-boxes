@@ -35,7 +35,7 @@ Following parameters are avaliable to configure Kubernetes installation;
 | HOSTNAME |  | Hostname for vm |
 | ACCESS_FROM_HOST | false | To access your cluster from the host, set the following variable to true |
 | IP |  | VM IP adress |
-| MEMORY | 2014 | Memory for VM |
+| MEMORY | 1024 | Memory for VM |
 | CPU | 1 | Number of VM CPU  |
   
 In order to change any parameter install [vagrant-env](https://github.com/gosuri/vagrant-env) plugin, copy **.env** file with name **.env.local**. Find the parameter you are looking for. uncomment by removing # infront. Finally, set its value.
